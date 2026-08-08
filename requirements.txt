@@ -2,3 +2,5 @@ streamlit>=1.44
 pandas>=2.2
 PyYAML>=6.0
 lir>=1.6
+numpy>=1.26
+opencv-python-headless>=4.10
