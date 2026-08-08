@@ -1,0 +1,40 @@
+# DeepGuard DF40 pilot
+# Development-only pilot. Keep external validation datasets untouched.
+study: DF40_pilot
+role: development
+source_dataset: DF40
+benchmark_framework: DeepfakeBench
+
+detectors:
+  - name: xception
+    config: external/DeepfakeBench/training/config/detector/xception.yaml
+  - name: ftcn
+    config: external/DeepfakeBench/training/config/detector/ftcn.yaml
+
+feature_sets:
+  - spatial
+  - spatial_temporal
+  - visual
+  - visual_face
+  - visual_av
+  - full_multimodal
+
+splits:
+  strategy: grouped
+  groups:
+    - source_id
+    - subject_id
+    - generator_id
+  development_folds: 5
+
+outputs:
+  detector_scores: results/detector_scores/
+  features: results/features/df40_pilot_features.csv
+  lir: results/lir/df40_pilot/
+
+rules:
+  - "Do not tune using external validation data."
+  - "Keep generator and subject groups separated between folds."
+  - "Store model/checkpoint hashes."
+  - "Detector confidence is not an LR."
+  - "Calibrate LR only on development data."
