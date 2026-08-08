@@ -1,45 +1,53 @@
-# DeepGuard v10 — Benchmark Runner
+# DeepGuard — Forensic Deepfake LR Laboratory
 
-DeepGuard v10 connects a forensic deepfake benchmark registry to detector adapters, feature extraction and a LiR hand-off.
+DeepGuard is a research framework for multimodal deepfake detection and forensic likelihood-ratio evaluation.
 
-## Modern datasets
+## Current pipeline
 
-- DF40 — 40 generation techniques and million-level data.
-- AV-Deepfake1M — >1M videos, >2,000 subjects, audio/video/audio-visual manipulation.
-- AV-Deepfake1M++ — 2025 extension with roughly 2M clips and perturbations.
-- DeepfakeBench — common benchmark/detector framework.
-- Deepfake-Eval-2024 — in-the-wild 2024 multimodal evaluation.
-- MAVOS-DD — multilingual open-set audio-video evaluation.
-- HydraFake — cross-model/cross-forgery/cross-domain evaluation resource.
-- GenVidBench — large-scale AI-generated-video benchmark.
-
-## Design principle
-
-Development and external validation are strictly separated. Detector selection, feature selection, fusion and calibration must be frozen before external validation.
-
-Detector outputs are measurements, not LRs. The final evidential interpretation is performed by the LiR layer after development/calibration.
-
-## Run
-
-```bash
-python -m venv .venv
-.venv\\Scripts\\activate
-pip install -r requirements.txt
-streamlit run app.py
+```text
+video -> detector adapters -> feature table -> development/calibration -> LiR -> external validation
 ```
 
-Large datasets are not automatically downloaded. The application generates official acquisition commands because access terms and dataset licences differ.
+### Detector adapters
 
-## Repository structure
+- `detectors/heuristic.py` — dependency-light pipeline baseline; **not a validated detector**.
+- `detectors/deepfakebench.py` — adapter for an externally installed DeepfakeBench checkout.
+- `run_detector.py` — batch runner for the baseline.
+- `run_deepfakebench.py` — batch runner for DeepfakeBench.
 
-- `app.py` — Streamlit benchmark runner
-- `benchmark.py` — dataset registry and study-plan generator
-- `detector_adapters.md` — detector integration contract
-- `lir_handoff.yaml` — LiR hand-off template
-- `requirements.txt` — Python dependencies
+DeepfakeBench itself is intentionally not vendored into this repository. Install the upstream project and its licensed model weights separately.
 
-## Reproducibility
+## DeepfakeBench adapter
 
-Record dataset version/access date, license/EULA, source/subject/generator IDs, detector commit, checkpoint hash, Python environment, FFmpeg/OpenCV versions, feature extractor version, LiR version, calibration parameters and split hashes.
+The adapter expects a command template that accepts `{video}` and `{output}` and writes JSON such as:
 
-This is a research framework and does not by itself establish forensic validity.
+```json
+{
+  "score": 0.73,
+  "label": 1,
+  "features": {"detector_score": 0.73}
+}
+```
+
+Example shape:
+
+```bash
+python run_deepfakebench.py ./data/videos --checkout ./external/DeepfakeBench --command "python YOUR_UPSTREAM_INFERENCE.py --video {video} --output {output}" --output deepfakebench_features.csv
+```
+
+The exact upstream inference command depends on the DeepfakeBench version, detector, checkpoint and configuration. Do not copy a command from another version without checking its current documentation.
+
+## Forensic LR principle
+
+Detector confidence is **not** a likelihood ratio. Keep detector outputs as measurement features. Train/calibrate the final LR system on development data and freeze it before independent validation.
+
+Recommended validation:
+
+- development: DF40, AV-Deepfake1M, DeepfakeBench
+- external: Deepfake-Eval-2024, AV-Deepfake1M++, MAVOS-DD, GenVidBench, HydraFake
+
+Record dataset versions, generator/subject/source grouping, detector commit, model hash, preprocessing, LiR version and calibration parameters.
+
+## Status
+
+The repository now contains the runnable detector adapter layer and LiR hand-off. Actual DeepfakeBench inference requires the upstream checkout and model weights to be installed locally; those assets are not included here.
