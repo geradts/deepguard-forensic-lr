@@ -1,0 +1,31 @@
+# DeepGuard v10 -> LiR hand-off
+output_path: ./deepguard_v10_lir_output
+experiments:
+  - name: frozen_full_multimodal
+    strategy: single_run
+    data:
+      provider:
+        method: parse_features_from_csv_file
+        path: ./deepguard_v10_features.csv
+        source_id_column: source_id
+      splits:
+        strategy: predefined_cross_validation
+        folds: 5
+    lr_system:
+      architecture: score_based
+      preprocessing:
+        method: pipeline
+        steps:
+          imputer: sklearn.impute.SimpleImputer
+          scaler: standard_scaler
+      comparing:
+        method: multivariate_logistic_fusion
+        to_llr: logistic_calibrator
+    output:
+      - method: metrics
+        columns: [cllr, cllr_min]
+      - method: tippett
+      - method: score_to_llr
+      - method: lr_histogram
+      - method: pav
+      - method: ece
