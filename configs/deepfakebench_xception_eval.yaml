@@ -1,0 +1,28 @@
+# DeepGuard wrapper configuration for the upstream DeepfakeBench Xception detector.
+# Upstream config: training/config/detector/xception.yaml
+# Do not place model weights in this repository.
+
+deepfakebench:
+  checkout: ./external/DeepfakeBench
+  detector_config: ./training/config/detector/xception.yaml
+  test_script: ./training/test.py
+  weights: ./training/weights/xception_best.pth
+  datasets:
+    - FaceForensics++
+    - Celeb-DF-v2
+    - DeepFakeDetection
+    - DFDCP
+    - UADFV
+  compression: c23
+  cuda: true
+
+output:
+  score_column: score
+  video_id_column: video_id
+  label_column: label
+  feature_columns:
+    - neural_score_xception
+  provenance:
+    detector: Xception
+    upstream_repository: SCLBD/DeepfakeBench
+    upstream_config: training/config/detector/xception.yaml
