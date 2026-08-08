@@ -4,3 +4,5 @@ PyYAML>=6.0
 lir>=1.6
 numpy>=1.26
 opencv-python-headless>=4.10
+# Colab/RAPIDS compatibility: current Colab CUDA RAPIDS packages require numba <0.62.
+numba>=0.60,<0.62
